@@ -178,6 +178,24 @@
             let pps = 0; buildings.forEach(b => pps += b.count * b.p);
             if(pps > 0) { score += pps; update(); }
         }, 1000);
+        function shareGame() {
+    const shareData = {
+        title: 'Tree Clicker',
+        text: 'Schau mal, wie viele Bäume ich schon gepflanzt habe! Kannst du mich schlagen?',
+        url: window.location.href // Nutzt automatisch deine eigene Domain
+    };
+
+    // Prüft, ob das Gerät das "echte" Teilen unterstützt (iPad/Handy)
+    if (navigator.share) {
+        navigator.share(shareData)
+            .then(() => console.log('Erfolgreich geteilt'))
+            .catch((err) => console.log('Fehler beim Teilen:', err));
+    } else {
+        // Fallback für PC: Link in die Zwischenablage kopieren
+        navigator.clipboard.writeText(window.location.href);
+        alert("Link wurde kopiert! Schicke ihn deinen Freunden. 🌳");
+    }
+}
     </script>
 </body>
 </html>
