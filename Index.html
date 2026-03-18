@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Tree Clicker - Premium Sound Edition</title>
+    <style>
+        body {
+            text-align: center; font-family: 'Segoe UI', Arial, sans-serif; background: #e8f5e9;
+            margin: 0; display: flex; height: 100vh; overflow: hidden;
+            user-select: none; touch-action: none;
+        }
+        .left { flex: 1.2; display: flex; flex-direction: column; align-items: center; justify-content: center; background: #c8e6c9; border-right: 5px solid #2e7d32; }
+        .right { flex: 1; background: white; padding: 20px; overflow-y: auto; text-align: left; box-shadow: -2px 0 10px rgba(0,0,0,0.1); }
+        
+        #score-display { font-size: 45px; font-weight: bold; color: #1b5e20; text-shadow: 1px 1px 0px white; }
+        
+        #click-target {
+            width: 250px; height: 250px; background: #4caf50; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+            position: relative; -webkit-tap-highlight-color: transparent;
+            transition: transform 0.1s;
+        }
+        #tree-img { width: 230px; height: 230px; pointer-events: none; }
+        #click-target:active { transform: scale(0.85); }
+
+        .shop-item {
+            border: 2px solid #4caf50; border-radius: 12px; padding: 12px;
+            margin-bottom: 12px; background: #f1f8e9; cursor: pointer;
+            transition: background 0.2s, transform 0.1s;
+        }
+        .shop-item:active:not(.disabled) { transform: scale(0.98); }
+        .shop-item:hover:not(.disabled) { background: #dcedc8; }
+        .shop-item.disabled { opacity: 0.4; cursor: not-allowed; border-color: #ccc; }
+        
+        .particle {
+            position: absolute; pointer-events: none; font-weight: bold;
+            font-size: 32px; color: #1b5e20; animation: up 0.8s forwards; z-index: 100;
+        }
+        @keyframes up { 0% {transform: translateY(0); opacity:1;} 100% {transform: translateY(-120px); opacity:0;} }
+        
+        h2 { color: #2e7d32; border-bottom: 2px solid #a5d6a7; padding-bottom: 5px; }
+        .item-cost { font-weight: bold; color: #d32f2f; }
+    </style>
+</head>
+<body>
+
+    <div class="left">
+        <div id="score-display">0 🌳</div>
+        <p id="tool-text" style="font-weight: bold;">Werkzeug: Hände ✋</p>
+        
+        <div id="click-target" onpointerdown="doClick(event)">
+            <img id="tree-img" src="cookie.png" alt="KLICK">
+        </div>
+        
+        <p style="margin-top:20px;">Stärke: <span id="ui-pow">1</span> | PPS: <span id="ui-pps">0</span></p>
+        <button onclick="if(confirm('Wirklich alles löschen?')){localStorage.clear(); location.reload();}" style="font-size:10px; opacity:0.5;">Reset</button>
+    </div>
+
+    <div class="right">
+        <h2>Shop 🛒</h2>
+        <div id="shop-container"></div>
+    </div>
+
+    <script>
+        // --- SOUND SETUP ---
+        const clickAudio = new Audio('click.mp3');
+        const buyAudio = new Audio('kaching.mp3'); // Neue Datei!
+        clickAudio.preload = "auto";
+        buyAudio.preload = "auto";
+
+        let score = 0;
+        let clickPower = 1;
+        let toolIdx = 0;
+        
+        const tools = [
+            {n: "Handschuhe", s: "🧤", p: 5, c: 20},
+            {n: "Spaten", s: "🦯", p: 25, c: 500},
+            {n: "Axt", s: "🪓", p: 150, c: 5000},
+            {n: "Traktor", s: "🚜", p: 1200, c: 100000},
+            {n: "Laser", s: "⚡", p: 10000, c: 2000000}
+        ];
+
+        const buildings = [
+            {n: "Wurm", s: "🪱", p: 1, c: 50, count: 0},
+            {n: "Dünger", s: "🧪", p: 12, c: 800, count: 0},
+            {n: "Gärtner", s: "👨‍🌾", p: 60, c: 8000, count: 0},
+            {n: "Fabrik", s: "🏭", p: 800, c: 150000, count: 0},
+            {n: "Galaxie", s: "🌌", p: 35000, c: 10000000, count: 0}
+        ];
+
+        // Funktion für den Klick-Sound (Baum)
+        function playClickSound() {
+            let s = clickAudio.cloneNode();
+            s.volume = 0.5;
+            s.playbackRate = 0.95 + Math.random() * 0.1;
+            s.play().catch(() => {});
+        }
+
+        // Funktion für den Kauf-Sound (Ka-Ching)
+        function playBuySound() {
+            let s = buyAudio.cloneNode();
+            s.volume = 0.7;
+            s.play().catch(() => {});
+        }
+
+        function doClick(e) {
+            if(e) e.preventDefault();
+            playClickSound();
+
+            score += clickPower;
+            
+            const p = document.createElement("div");
+            p.className = "particle";
+            p.style.left = (e.clientX || 150) + "px";
+            p.style.top = (e.clientY || 150) + "px";
+            p.innerText = "+" + Math.floor(clickPower).toLocaleString();
+            document.body.appendChild(p);
+            setTimeout(() => p.remove(), 800);
+            
+            update();
+            save();
+        }
+
+        function buildShop() {
+            let html = `<h3>Werkzeug</h3>
+                <div id="tool-btn" class="shop-item" onclick="buyTool()">
+                    <b id="tool-name">Upgrade</b><br><span id="tool-cost" class="item-cost"></span>
+                </div><h3>Gebäude</h3>`;
+            
+            buildings.forEach((b, i) => {
+                html += `<div id="b-${i}" class="shop-item" onclick="buyB(${i})">
+                    <b>${b.n} ${b.s} (+${b.p}/s)</b><br>
+                    <span id="bc-${i}" class="item-cost">Kosten: ${b.c}</span>
+                </div>`;
+            });
+            document.getElementById("shop-container").innerHTML = html;
+        }
+
+        function buyTool() {
+            let t = tools[toolIdx];
+            if(t && score >= t.c) {
+                score -= t.c;
+                clickPower += t.p;
+                toolIdx++;
+                playBuySound(); // Sound abspielen!
+                update();
+                save();
+            }
+        }
+
+        function buyB(i) {
+            let b = buildings[i];
+            if(score >= b.c) {
+                score -= b.c;
+                b.count++;
+                b.c = Math.round(b.c * 1.3);
+                playBuySound(); // Sound abspielen!
+                update();
+                save();
+            }
+        }
+
+        function update() {
+            document.getElementById("score-display").innerText = Math.floor(score).toLocaleString() + " 🌳";
+            document.getElementById("ui-pow").innerText = Math.floor(clickPower).toLocaleString();
+            
+            const t = tools[toolIdx];
+            const tBtn = document.getElementById("tool-btn");
+            if(t) {
+                document.getElementById("tool-name").innerText = "Upgrade: " + t.n + " " + t.s;
+                document.getElementById("tool-cost").innerText = "Kosten: " + t.c.toLocaleString();
+                tBtn.classList.toggle("disabled", score < t.c);
+            } else {
+                document.getElementById("tool-name").innerText = "Max Werkzeug! ⭐";
+                tBtn.classList.add("disabled");
+            }
+
+            let pps = 0;
+            buildings.forEach((b, i) => {
+                pps += b.count * b.p;
+                document.getElementById("bc-" + i).innerText = `Kosten: ${b.c.toLocaleString()} (Besitz: ${b.count})`;
+                document.getElementById("b-" + i).classList.toggle("disabled", score < b.cost);
+            });
+            document.getElementById("ui-pps").innerText = pps.toLocaleString();
+        }
+
+        function save() {
+            const data = {s: score, cp: clickPower, ti: toolIdx, b: buildings};
+            localStorage.setItem("tree_save_final_sound", JSON.stringify(data));
+        }
+
+        function load() {
+            const saved = localStorage.getItem("tree_save_final_sound");
+            if(saved) {
+                const d = JSON.parse(saved);
+                score = Number(d.s) || 0;
+                clickPower = Number(d.cp) || 1;
+                toolIdx = Number(d.ti) || 0;
+                if(d.b) d.b.forEach((savedB, i) => {
+                    if(buildings[i]) {
+                        buildings[i].count = savedB.count;
+                        buildings[i].c = savedB.c;
+                    }
+                });
+            }
+        }
+
+        buildShop();
+        load();
+        update();
+
+        setInterval(() => {
+            let pps = 0;
+            buildings.forEach(b => pps += b.count * b.p);
+            if(pps > 0) {
+                score += pps;
+                update();
+            }
+        }, 1000);
+    </script>
+</body>
+</html>
