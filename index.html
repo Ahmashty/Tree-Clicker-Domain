@@ -57,7 +57,39 @@
     </div>
 
     <script>
-     let totalClicks = 0;
+  function doClick(e) {
+    if(e) e.preventDefault();
+    
+    // NEU: Statistiken hochzählen
+    totalClicks++;
+    totalEarnings += clickPower;
+    
+    // ... dein bisheriger Code (Sound, Score, Partikel) ...
+    score += clickPower;
+    update();
+    save();
+}
+
+function toggleStats() {
+    const modal = document.getElementById('stats-modal');
+    if(modal.style.display === 'none' || modal.style.display === '') {
+        // Werte aktualisieren bevor wir es anzeigen
+        document.getElementById('stat-clicks').innerText = totalClicks.toLocaleString();
+        document.getElementById('stat-total').innerText = Math.floor(totalEarnings).toLocaleString();
+        document.getElementById('stat-pow').innerText = clickPower.toLocaleString();
+        
+        const mins = Math.floor((Date.now() - startTime) / 60000);
+        document.getElementById('stat-time').innerText = mins;
+        
+        modal.style.display = 'flex';
+    } else {
+        modal.style.display = 'none';
+    }
+}
+
+// WICHTIG: Erweitere deine save() und load() Funktionen um totalClicks und totalEarnings, 
+// damit die Statistik nicht nach jedem Neuladen weg ist!
+        let totalClicks = 0;
 let totalEarnings = 0; // Alles, was du jemals gesammelt hast
 let startTime = Date.now(); // Um zu sehen, wie lange du schon spielst
         // SOUNDS MIT SICHERHEITS-NETZ
