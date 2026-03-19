@@ -41,104 +41,75 @@ data-ad-layout="in-article"
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Tree Clicker | Ultimate 🌳</title>
-  <meta name="description" content="Klicke auf den Baum, sammle Münzen und baue deinen eigenen Wald auf! Ähnlich wie cookie cklicker ist das,das perfekte Spiel wenn dir langweilig ist! PeEin entspannendes Clicker-Spiel. (Cool Web Game)">
+  <meta name="description" content="Klicke auf den Baum, sammle Münzen und baue deinen eigenen Wald auf!">
 
 <link rel="icon" type="image/png" href="icon.png">
-<link rel="apple-touch-icon" href="icon.png"> <meta property="og:title" content="Mein Baum-Clicker Spiel">
-<meta property="og:description" content="Klicke dich zum Wald-Imperium! Spiel jetzt kostenlos im Browser.">
-<meta property="og:image" content="og-image.jpg"> <meta property="og:url" content="https://deine-domain.de">
-
     <style>
         body { text-align: center; font-family: 'Segoe UI', sans-serif; background: #e8f5e9; margin: 0; display: flex; height: 100vh; overflow: hidden; user-select: none; }
         .left { flex: 1.2; display: flex; flex-direction: column; align-items: center; justify-content: center; background: #c8e6c9; border-right: 5px solid #2e7d32; position: relative; }
         .right { flex: 1; background: white; padding: 20px; overflow-y: auto; text-align: left; box-shadow: -2px 0 10px rgba(0,0,0,0.1); }
-        .auth-bar { position: absolute; top: 10px; right: 10px; z-index: 100; text-align: right; }
-        #user-info { font-size: 11px; color: #2e7d32; font-weight: bold; display: block; margin-bottom: 2px; background: rgba(255,255,255,0.7); padding: 2px 5px; border-radius: 4px; }
+        .auth-bar { position: absolute; top: 10px; right: 10px; z-index: 100; }
         #score-display { font-size: 42px; font-weight: bold; color: #1b5e20; text-shadow: 1px 1px 0 white; margin-bottom: 10px; }
         #click-target { width: 230px; height: 230px; background: #4caf50; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: transform 0.1s; box-shadow: 0 8px 25px rgba(0,0,0,0.2); -webkit-tap-highlight-color: transparent; }
         #click-target:active { transform: scale(0.9); }
         #tree-img { width: 190px; height: 190px; pointer-events: none; }
-        .shop-item { border: 2px solid #4caf50; border-radius: 12px; padding: 12px; margin-bottom: 10px; background: #f1f8e9; cursor: pointer; transition: 0.2s; }
-        .shop-item:hover { background: #e1edcc; }
+        .shop-item { border: 2px solid #4caf50; border-radius: 12px; padding: 12px; margin-bottom: 10px; background: #f1f8e9; cursor: pointer; }
         .shop-item.disabled { opacity: 0.4; cursor: not-allowed; filter: grayscale(1); }
-        .btn { padding: 10px 18px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; color: white; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .btn { padding: 10px 18px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; color: white; }
         .btn-blue { background: #1976d2; }
         .btn-green { background: #2e7d32; }
         #stats-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 999; align-items: center; justify-content: center; }
-        .modal-content { background: white; padding: 25px; border-radius: 20px; width: 85%; max-width: 380px; text-align: left; }
-        .particle { position: absolute; pointer-events: none; font-weight: bold; font-size: 32px; color: #1b5e20; animation: up 0.8s forwards; text-shadow: 1px 1px 0 white; }
+        .modal-content { background: white; padding: 25px; border-radius: 20px; width: 85%; max-width: 380px; }
+        .particle { position: absolute; pointer-events: none; font-weight: bold; font-size: 32px; color: #1b5e20; animation: up 0.8s forwards; }
         @keyframes up { 0% {transform: translateY(0); opacity:1;} 100% {transform: translateY(-130px); opacity:0;} }
-        #leaderboard-ui { background: rgba(0,0,0,0.8); color: white; padding: 15px; border-radius: 15px; margin: 10px; text-align: center; border: 2px solid #4CAF50; }
+        #leaderboard-ui { background: rgba(0,0,0,0.9); color: white; padding: 15px; border-radius: 15px; margin: 10px; border: 2px solid #4CAF50; width: 90%; }
+        table { width: 100%; border-collapse: collapse; font-size: 14px; }
+        td { padding: 5px; border-bottom: 1px solid #333; }
     </style>
 </head>
 <body onpointerdown="unlockAudio()">
 
-   <div class="auth-bar">
-        <span id="user-info">Offline-Modus</span>
+    <div class="auth-bar">
         <button id="auth-btn" class="btn btn-blue" onclick="handleAuth()">Login 🔑</button>
     </div>
 
     <div class="left">
         <div id="score-display">0 🌳</div>
-        <p id="tool-text" style="font-weight: bold; color: #2e7d32; font-size: 18px;">Hände ✋</p>
-        
         <div id="click-target" onpointerdown="doClick(event)">
             <img id="tree-img" src="cookie.png" alt="BAUM">
         </div>
+        <p>Power: <b id="ui-pow">1</b> | PPS: <b id="ui-pps">0</b></p>
         
-        <p style="font-size: 18px;">Power: <b id="ui-pow">1</b> | PPS: <b id="ui-pps">0</b></p>
-        
-        <button class="btn btn-blue" style="width: 160px;" onclick="toggleStats()">Statistik 📊</button>
-        <button class="btn btn-green" style="margin-top:10px; width: 160px;" onclick="shareGame()">Teilen 📤</button>
-        <button class="btn btn-green" style="margin-top:10px; width: 160px; background: gold; color: black;" onclick="sendScore()">Highscore senden 🏆</button>
+        <button class="btn btn-blue" onclick="toggleStats()">Statistik 📊</button>
+        <button class="btn btn-green" style="margin-top:10px; background: gold; color: black;" onclick="sendScore()">Score absenden 🏆</button>
 
         <div id="leaderboard-ui">
-            <h3 style="color: #4CAF50; margin: 0 0 10px 0;">🏆 Top Gärtner</h3>
-            <div id="leaderboard-list">Lade...</div>
-            <button onclick="showLeaderboard()" style="background: none; border: 1px solid #4CAF50; color: white; cursor: pointer; font-size: 10px; margin-top: 5px;">Aktualisieren 🔄</button>
+            <h3 style="margin: 0 0 10px 0; color: #4CAF50;">🏆 Top 10 Gärtner</h3>
+            <div id="leaderboard-list">Lade Liste...</div>
         </div>
     </div>
 
     <div class="right">
-        <h2 style="color: #2e7d32; border-bottom: 2px solid #4caf50; padding-bottom: 5px;">Shop 🛒</h2>
-        <div id="shop-container">Lade Items...</div>
+        <h2 style="color: #2e7d32; border-bottom: 2px solid #4caf50;">Shop 🛒</h2>
+        <div id="shop-container">Lade Shop...</div>
     </div>
 
     <div id="stats-modal" onclick="if(event.target == this) toggleStats()">
         <div class="modal-content">
-            <h2 style="color:#2e7d32; margin-top:0;">Erfolge 🏆</h2>
-            <hr>
-            <p>Klicks total: <b id="stat-clicks">0</b></p>
-            <p>Bäume total: <b id="stat-total">0</b></p>
-            <p>Power: <b id="stat-pow">1</b></p>
-            <p>Spielzeit: <b id="stat-time">0</b> Min.</p>
-            <button class="btn btn-green" style="width:100%; margin-top:15px;" onclick="toggleStats()">Schließen</button>
+            <h2>Statistik 📈</h2>
+            <p>Klicks: <b id="stat-clicks">0</b></p>
+            <p>Gesamt: <b id="stat-total">0</b></p>
+            <button class="btn btn-green" onclick="toggleStats()">Schließen</button>
         </div>
     </div>
 
     <script>
-        function formatNumber(num) {
-            if (num >= 1000000) return (num / 1000000).toFixed(1) + " Mio";
-            if (num >= 1000) return (num / 1000).toFixed(1) + "k";
-            return Math.floor(num).toLocaleString();
-        }
-
-        const clickSound = new Audio('click.mp3');
-        const buySound = new Audio('kaching.mp3');
-        let audioUnlocked = false;
-
-        function unlockAudio() {
-            if (audioUnlocked) return;
-            clickSound.play().then(() => { clickSound.pause(); clickSound.currentTime = 0; audioUnlocked = true; }).catch(() => {});
-        }
-
         const SB_URL = "https://teptucgylpztawlpbqb.supabase.co";
         const SB_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRlcHR1Y2d5bHB6dGF3bHBiYnFiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM5MTc3MjMsImV4cCI6MjA4OTQ5MzcyM30.7bFpp_R4ouzVnt9ZskQgpgprsWvTcwXXQXDlYGDzyUA";
-        let sb = null;
-        try { sb = supabase.createClient(SB_URL, SB_KEY); } catch(e) { console.error("SB Error", e); }
+        const sb = supabase.createClient(SB_URL, SB_KEY);
 
         let score = 0, clickPower = 1, toolIdx = 0;
-        let totalClicks = 0, totalEarnings = 0, startTime = Date.now(), user = null;
+        let totalClicks = 0, totalEarnings = 0, startTime = Date.now();
 
         const tools = [
             {n: "Handschuhe", s: "🧤", p: 5, c: 20},
@@ -159,29 +130,24 @@ data-ad-layout="in-article"
         ];
 
         async function showLeaderboard() {
-            const listDiv = document.getElementById("leaderboard-list");
-            if(!sb) return;
             const { data, error } = await sb.from('leaderboard').select('username, coins_total').order('coins_total', { ascending: false }).limit(10);
-            if (error) { listDiv.innerHTML = "Fehler!"; return; }
-            let h = "<table style='width:100%; font-size:12px;'>";
-            data.forEach((e, i) => {
-                let m = (i===0)?"🥇 ":(i===1)?"🥈 ":(i===2)?"🥉 ":(i+1)+". ";
-                h += `<tr><td>${m}${e.username}</td><td style='text-align:right'>${formatNumber(e.coins_total)}</td></tr>`;
+            if (error) return;
+            let html = "<table>";
+            data.forEach((entry, i) => {
+                html += `<tr><td>${i+1}. ${entry.username}</td><td style="text-align:right">${Math.floor(entry.coins_total).toLocaleString()}</td></tr>`;
             });
-            listDiv.innerHTML = h + "</table>";
+            document.getElementById("leaderboard-list").innerHTML = html + "</table>";
         }
 
         async function sendScore() {
-            if(!sb) return;
-            const name = prompt("Dein Name für die Bestenliste:");
+            const name = prompt("Dein Name:");
             if(!name) return;
             const { error } = await sb.from('leaderboard').upsert({ username: name, coins_total: score }, { onConflict: 'username' });
-            if (error) alert("Fehler: " + error.message);
-            else { alert("Gespeichert!"); showLeaderboard(); }
+            if(error) alert("Fehler!"); else { alert("Gespeichert!"); showLeaderboard(); }
         }
 
         function buildShop() {
-            let h = `<h3>Upgrades</h3><div id="t-btn" class="shop-item" onclick="buyTool()"><b id="t-n"></b><br><span id="t-c"></span></div><h3>Gebäude</h3>`;
+            let h = `<h3>Werkzeuge</h3><div id="t-btn" class="shop-item" onclick="buyTool()"><b id="t-n"></b><br><span id="t-c"></span></div><h3>Gebäude</h3>`;
             buildings.forEach((b, i) => {
                 h += `<div id="b-${i}" class="shop-item" onclick="buyB(${i})"><b>${b.n} ${b.s} (+${b.p}/s)</b><br><span id="bc-${i}"></span></div>`;
             });
@@ -189,91 +155,58 @@ data-ad-layout="in-article"
         }
 
         function update() {
-            document.getElementById("score-display").innerText = formatNumber(score) + " 🌳";
-            document.getElementById("ui-pow").innerText = formatNumber(clickPower);
+            document.getElementById("score-display").innerText = Math.floor(score).toLocaleString() + " 🌳";
+            document.getElementById("ui-pow").innerText = Math.floor(clickPower).toLocaleString();
+            let pps = 0;
+            buildings.forEach((b, i) => {
+                pps += b.count * b.p;
+                document.getElementById("bc-" + i).innerText = "Kosten: " + b.c.toLocaleString() + " (Besitz: " + b.count + ")";
+                document.getElementById("b-" + i).classList.toggle("disabled", score < b.c);
+            });
+            document.getElementById("ui-pps").innerText = pps.toLocaleString();
             const t = tools[toolIdx];
             if(t) {
                 document.getElementById("t-n").innerText = t.n + " " + t.s;
                 document.getElementById("t-c").innerText = "Kosten: " + t.c.toLocaleString();
                 document.getElementById("t-btn").classList.toggle("disabled", score < t.c);
-                document.getElementById("tool-text").innerText = (toolIdx > 0 ? tools[toolIdx-1].n : "Hände");
-            } else {
-                document.getElementById("t-n").innerText = "MAX LEVEL";
-                document.getElementById("t-btn").classList.add("disabled");
             }
-            let pps = 0;
-            buildings.forEach((b, i) => {
-                pps += b.count * b.p;
-                document.getElementById("bc-" + i).innerText = `Kosten: ${b.c.toLocaleString()} (Besitz: ${b.count})`;
-                document.getElementById("b-" + i).classList.toggle("disabled", score < b.c);
-            });
-            document.getElementById("ui-pps").innerText = formatNumber(pps);
         }
 
         function doClick(e) {
-            if(e) e.preventDefault();
-            clickSound.currentTime = 0; clickSound.play().catch(() => {});
-            totalClicks++; totalEarnings += clickPower; score += clickPower;
-            const p = document.createElement("div");
-            p.className = "particle";
-            p.style.left = (e.clientX || 150) + "px"; p.style.top = (e.clientY || 150) + "px";
-            p.innerText = "+" + Math.floor(clickPower);
-            document.body.appendChild(p);
-            setTimeout(() => p.remove(), 800);
-            update(); save();
+            score += clickPower; totalClicks++; totalEarnings += clickPower;
+            update();
         }
 
         function buyTool() {
             let t = tools[toolIdx];
-            if(t && score >= t.c) { buySound.play().catch(() => {}); score -= t.c; clickPower += t.p; toolIdx++; update(); save(); }
+            if(t && score >= t.c) { score -= t.c; clickPower += t.p; toolIdx++; update(); }
         }
 
         function buyB(i) {
             let b = buildings[i];
-            if(score >= b.c) { buySound.play().catch(() => {}); score -= b.c; b.count++; b.c = Math.round(b.c * 1.3); update(); save(); }
-        }
-
-        function save() {
-            const d = { s: score, cp: clickPower, ti: toolIdx, b: buildings, tc: totalClicks, te: totalEarnings, st: startTime };
-            localStorage.setItem("tree_v8", JSON.stringify(d));
-            if(user && sb && totalClicks % 5 === 0) sb.from('profiles').upsert({ id: user.id, game_data: d });
-        }
-
-        async function handleAuth() {
-            const m = prompt("E-Mail für Cloud Save:");
-            if(!m) return;
-            const { error } = await sb.auth.signInWithOtp({ email: m, options: { emailRedirectTo: window.location.href } });
-            if(error) alert(error.message); else alert("Check dein Postfach!");
+            if(score >= b.c) { score -= b.c; b.count++; b.c = Math.round(b.c * 1.3); update(); }
         }
 
         function toggleStats() {
             const m = document.getElementById('stats-modal');
-            if(m.style.display === 'flex') m.style.display = 'none';
-            else {
-                document.getElementById('stat-clicks').innerText = totalClicks.toLocaleString();
-                document.getElementById('stat-total').innerText = formatNumber(totalEarnings);
-                document.getElementById('stat-pow').innerText = formatNumber(clickPower);
-                document.getElementById('stat-time').innerText = Math.floor((Date.now()-startTime)/60000);
-                m.style.display = 'flex';
-            }
+            m.style.display = (m.style.display === 'flex') ? 'none' : 'flex';
+            document.getElementById('stat-clicks').innerText = totalClicks;
+            document.getElementById('stat-total').innerText = Math.floor(totalEarnings).toLocaleString();
         }
 
-        function shareGame() { alert("Link kopiert!"); navigator.clipboard.writeText(window.location.href); }
+        function unlockAudio() {}
+        function handleAuth() { alert("Coming soon!"); }
 
         // Start
-        buildShop();
-        const saved = localStorage.getItem("tree_v8");
-        if(saved) {
-            const d = JSON.parse(saved);
-            score = d.s; clickPower = d.cp; toolIdx = d.ti; totalClicks = d.tc || 0; totalEarnings = d.te || 0;
-            if(d.b) d.b.forEach((sb, i) => { if(buildings[i]){ buildings[i].count = sb.count; buildings[i].c = sb.c; }});
-        }
-        update();
-        showLeaderboard();
-        setInterval(() => {
-            let pps = 0; buildings.forEach(b => pps += b.count * b.p);
-            if(pps > 0) { score += pps; totalEarnings += pps; update(); }
-        }, 1000);
+        window.onload = () => {
+            buildShop();
+            update();
+            showLeaderboard();
+            setInterval(() => {
+                let pps = 0; buildings.forEach(b => pps += b.count * b.p);
+                if(pps > 0) { score += pps; totalEarnings += pps; update(); }
+            }, 1000);
+        };
     </script>
 </body>
 </html>
