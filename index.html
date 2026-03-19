@@ -180,11 +180,7 @@
       ];
 
         // --- FUNCTIONS ---
-   function formatNumber(num) {
-    if (num >= 1000000) return (num / 1000000).toFixed(1) + " Mio";
-    if (num >= 1000) return (num / 1000).toFixed(1) + "k";
-    return num.toLocaleString(); // Macht aus 1000 -> 1.000
-}
+   
          async function showLeaderboard() {
     const listDiv = document.getElementById("leaderboard-list");
     
