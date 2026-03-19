@@ -79,20 +79,7 @@
 
     <script>
 
-let sb = null;
-try {
-    // Wir erzwingen hier zusätzliche Header, um CORS zu umgehen
-    sb = supabase.createClient(SB_URL, SB_KEY, {
-        auth: {
-            persistSession: true,
-            autoRefreshToken: true,
-            detectSessionInUrl: true
-        }
-    });
-    console.log("Supabase Client initialisiert");
-} catch(e) {
-    console.error("Fehler beim Erstellen des Clients:", e);
-}
+
       // --- SOUNDS ---
         const clickSound = new Audio('click.mp3');
         const buySound = new Audio('kaching.mp3');
