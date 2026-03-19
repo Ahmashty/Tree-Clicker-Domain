@@ -119,24 +119,17 @@ let startTime = Date.now(); // Um zu sehen, wie lange du schon spielst
         ];
 
         function doClick(e) {
-            if(e) e.preventDefault();
-            
-            // Sound-Check: Spielt nur ab, wenn möglich
-            clickAudio.play().catch(() => {}); 
-            
-            score += clickPower;
-            
-            // Partikel
-            const p = document.createElement("div");
-            p.className = "particle";
-            p.style.left = (e.clientX || 150) + "px";
-            p.style.top = (e.clientY || 150) + "px";
-            p.innerText = "+" + Math.floor(clickPower).toLocaleString();
-            document.body.appendChild(p);
-            setTimeout(() => p.remove(), 800);
-            
-            update();
-            save();
+    if(e) e.preventDefault();
+    
+    // HIER MUSS ES STEHEN:
+    totalClicks += 1;          // Zählt jeden einzelnen Klick
+    totalEarnings += clickPower; // Zählt jeden Baum, den du generierst
+    
+    // ... dein restlicher Code (Sound, Score-Update, Partikel)
+    score += clickPower;
+    update();
+    save();
+}
         }
 
         function buildShop() {
