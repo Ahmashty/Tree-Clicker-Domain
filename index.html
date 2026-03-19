@@ -187,21 +187,38 @@ let startTime = Date.now(); // Um zu sehen, wie lange du schon spielst
         }
 
         function save() {
-            localStorage.setItem("tree_vFinal", JSON.stringify({s:score, cp:clickPower, ti:toolIdx, b:buildings}));
-        }
+    const gameData = {
+        s: score,
+        cp: clickPower,
+        ti: toolIdx,
+        b: buildings,
+        tc: totalClicks,    // Statistik speichern
+        te: totalEarnings,  // Statistik speichern
+        st: startTime       // Startzeit speichern
+    };
+    // Wir nutzen einen neuen Namen ("v2"), um Konflikte mit altem Speicher zu vermeiden
+    localStorage.setItem("tree_clicker_v2", JSON.stringify(gameData));
+}
 
-        function load() {
-            const saved = localStorage.getItem("tree_vFinal");
-            if(saved) {
-                const d = JSON.parse(saved);
-                score = Number(d.s) || 0;
-                clickPower = Number(d.cp) || 1;
-                toolIdx = Number(d.ti) || 0;
-                if(d.b) d.b.forEach((savedB, i) => {
-                    if(buildings[i]) { buildings[i].count = savedB.count; buildings[i].c = savedB.c; }
-                });
+function load() {
+    const saved = localStorage.getItem("tree_clicker_v2");
+    if(saved) {
+        const d = JSON.parse(saved);
+        score = d.s || 0;
+        clickPower = d.cp || 1;
+        toolIdx = d.ti || 0;
+        totalClicks = d.tc || 0;    // Statistik laden
+        totalEarnings = d.te || 0;  // Statistik laden
+        startTime = d.st || Date.now();
+        
+        if(d.b) d.b.forEach((savedB, i) => {
+            if(buildings[i]) {
+                buildings[i].count = savedB.count;
+                buildings[i].c = savedB.c;
             }
-        }
+        });
+    }
+}
 
         buildShop(); load(); update();
         setInterval(() => {
