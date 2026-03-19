@@ -1,205 +1,140 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
+<!-- ✅ AdSense NUR hier -->
 <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4424018674779732"
      crossorigin="anonymous"></script>
 
-<script>
-     (adsbygoogle = window.adsbygoogle || []).push({});
-     <ins class="adsbygoogle"
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Tree Clicker | Ultimate 🌳</title>
+<link rel="icon" type="image/png" href="icon.png">
+
+<style>
+/* ALLES UNVERÄNDERT */
+body { text-align: center; font-family: 'Segoe UI', sans-serif; background: #e8f5e9; margin: 0; display: flex; height: 100vh; overflow: hidden; user-select: none; }
+.left { flex: 1.2; display: flex; flex-direction: column; align-items: center; justify-content: center; background: #c8e6c9; border-right: 5px solid #2e7d32; position: relative; }
+.right { flex: 1; background: white; padding: 20px; overflow-y: auto; text-align: left; box-shadow: -2px 0 10px rgba(0,0,0,0.1); }
+.auth-bar { position: absolute; top: 10px; right: 10px; z-index: 100; }
+#score-display { font-size: 38px; font-weight: bold; color: #1b5e20; text-shadow: 1px 1px 0 white; margin-bottom: 10px; }
+#click-target { width: 230px; height: 230px; background: #4caf50; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: transform 0.1s; box-shadow: 0 8px 25px rgba(0,0,0,0.2); -webkit-tap-highlight-color: transparent; }
+#click-target:active { transform: scale(0.9); }
+#tree-img { width: 190px; height: 190px; pointer-events: none; }
+.shop-item { border: 2px solid #4caf50; border-radius: 12px; padding: 12px; margin-bottom: 10px; background: #f1f8e9; cursor: pointer; }
+.shop-item.disabled { opacity: 0.4; cursor: not-allowed; filter: grayscale(1); }
+.btn { padding: 10px 18px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; color: white; }
+.btn-blue { background: #1976d2; }
+.btn-green { background: #2e7d32; }
+#stats-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 999; align-items: center; justify-content: center; }
+.modal-content { background: white; padding: 25px; border-radius: 20px; width: 85%; max-width: 380px; text-align: left;}
+#leaderboard-ui { background: rgba(0,0,0,0.9); color: white; padding: 15px; border-radius: 15px; margin: 10px; border: 2px solid #4CAF50; width: 90%; max-width: 300px; }
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+td { padding: 4px; border-bottom: 1px solid #333; }
+</style>
+</head>
+
+<body>
+
+<div class="auth-bar">
+<button id="auth-btn" class="btn btn-blue" onclick="handleAuth()">Login 🔑</button>
+</div>
+
+<div class="left">
+<div id="score-display">0 🌳</div>
+
+<!-- ✅ Werbung richtig im BODY -->
+<ins class="adsbygoogle"
      style="display:block"
      data-ad-client="ca-pub-4424018674779732"
      data-ad-slot="5921402595"
      data-ad-format="auto"
      data-full-width-responsive="true"></ins>
+<script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+
+<div id="click-target" onclick="doClick(event)">
+<img id="tree-img" src="cookie.png" alt="BAUM">
+</div>
+
+<p>Power: <b id="ui-pow">1</b> | PPS: <b id="ui-pps">0</b></p>
+
+<button class="btn btn-blue" onclick="toggleStats()">Statistik 📊</button>
+<button class="btn btn-green" style="margin-top:10px; background: gold; color: black;" onclick="sendScore()">Score absenden 🏆</button>
+
+<div id="leaderboard-ui">
+<h3 style="margin: 0 0 10px 0; color: #4CAF50;">🏆 Top 10 Gärtner</h3>
+<div id="leaderboard-list">Lade Liste...</div>
+</div>
+</div>
+
+<div class="right">
+<h2 style="color: #2e7d32; border-bottom: 2px solid #4caf50;">Shop 🛒</h2>
+<div id="shop-container">Lade Shop...</div>
+</div>
+
+<script>
+const SB_URL = "https://teptucgylpztawlpbqb.supabase.co";
+const SB_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRlcHR1Y2d5bHB6dGF3bHBiYnFiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM5MTc3MjMsImV4cCI6MjA4OTQ5MzcyM30.7bFpp_R4ouzVnt9ZskQgpgprsWvTcwXXQXDlYGDzyUA";
+const sb = supabase.createClient(SB_URL, SB_KEY);
+
+let score = 0, clickPower = 1, toolIdx = 0;
+let totalClicks = 0, totalEarnings = 0, startTime = Date.now();
+
+const buildings = [
+    {n: "Regenwurm", s: "🪱", p: 1, c: 50, count: 0}
+];
+
+async function showLeaderboard() {
+    const { data, error } = await sb
+        .from('leaderboard')
+        .select('username, coins_total')
+        .order('coins_total', { ascending: false })
+        .limit(10);
+
+    if (error) {
+        console.log("FEHLER:", error);
+        alert(error.message);
+        return;
+    }
+
+    console.log("DATEN:", data);
+
+    let html = "<table>";
+    data.forEach((entry, i) => {
+        html += `<tr><td>${i+1}. ${entry.username}</td><td style="text-align:right">${Math.floor(entry.coins_total)}</td></tr>`;
+    });
+
+    document.getElementById("leaderboard-list").innerHTML = html + "</table>";
+}
+
+async function sendScore() {
+    const name = prompt("Dein Name:");
+    if(!name) return;
+
+    const { error } = await sb
+        .from('leaderboard')
+        .upsert(
+            { username: name, coins_total: score },
+            { onConflict: 'username' }
+        );
+
+    if(error) {
+        console.log("INSERT FEHLER:", error);
+        alert(error.message);
+    } else {
+        alert("Gespeichert!");
+        showLeaderboard();
+    }
+}
+
+function doClick() {
+    score += clickPower;
+}
+
+window.onload = () => {
+    showLeaderboard();
+};
 </script>
- 
-  
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Tree Clicker | Ultimate 🌳</title>
-    <link rel="icon" type="image/png" href="icon.png">
-    
-    <style>
-        body { text-align: center; font-family: 'Segoe UI', sans-serif; background: #e8f5e9; margin: 0; display: flex; height: 100vh; overflow: hidden; user-select: none; }
-        .left { flex: 1.2; display: flex; flex-direction: column; align-items: center; justify-content: center; background: #c8e6c9; border-right: 5px solid #2e7d32; position: relative; }
-        .right { flex: 1; background: white; padding: 20px; overflow-y: auto; text-align: left; box-shadow: -2px 0 10px rgba(0,0,0,0.1); }
-        .auth-bar { position: absolute; top: 10px; right: 10px; z-index: 100; }
-        #score-display { font-size: 38px; font-weight: bold; color: #1b5e20; text-shadow: 1px 1px 0 white; margin-bottom: 10px; }
-        #click-target { width: 230px; height: 230px; background: #4caf50; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: transform 0.1s; box-shadow: 0 8px 25px rgba(0,0,0,0.2); -webkit-tap-highlight-color: transparent; }
-        #click-target:active { transform: scale(0.9); }
-        #tree-img { width: 190px; height: 190px; pointer-events: none; }
-        .shop-item { border: 2px solid #4caf50; border-radius: 12px; padding: 12px; margin-bottom: 10px; background: #f1f8e9; cursor: pointer; }
-        .shop-item.disabled { opacity: 0.4; cursor: not-allowed; filter: grayscale(1); }
-        .btn { padding: 10px 18px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; color: white; }
-        .btn-blue { background: #1976d2; }
-        .btn-green { background: #2e7d32; }
-        #stats-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 999; align-items: center; justify-content: center; }
-        .modal-content { background: white; padding: 25px; border-radius: 20px; width: 85%; max-width: 380px; text-align: left;}
-        #leaderboard-ui { background: rgba(0,0,0,0.9); color: white; padding: 15px; border-radius: 15px; margin: 10px; border: 2px solid #4CAF50; width: 90%; max-width: 300px; }
-        table { width: 100%; border-collapse: collapse; font-size: 13px; }
-        td { padding: 4px; border-bottom: 1px solid #333; }
-    </style>
-</head>
-<body>
 
-    <div class="auth-bar">
-        <button id="auth-btn" class="btn btn-blue" onclick="handleAuth()">Login 🔑</button>
-    </div>
-
-    <div class="left">
-        <div id="score-display">0 🌳</div>
-        <div id="click-target" onclick="doClick(event)">
-            <img id="tree-img" src="cookie.png" alt="BAUM">
-        </div>
-        <p>Power: <b id="ui-pow">1</b> | PPS: <b id="ui-pps">0</b></p>
-        
-        <button class="btn btn-blue" onclick="toggleStats()">Statistik 📊</button>
-        <button class="btn btn-green" style="margin-top:10px; background: gold; color: black;" onclick="sendScore()">Score absenden 🏆</button>
-
-        <div id="leaderboard-ui">
-            <h3 style="margin: 0 0 10px 0; color: #4CAF50;">🏆 Top 10 Gärtner</h3>
-            <div id="leaderboard-list">Lade Liste...</div>
-        </div>
-    </div>
-
-    <div class="right">
-        <h2 style="color: #2e7d32; border-bottom: 2px solid #4caf50;">Shop 🛒</h2>
-        <div id="shop-container">Lade Shop...</div>
-    </div>
-
-    <div id="stats-modal" onclick="if(event.target == this) toggleStats()">
-        <div class="modal-content">
-            <h2 style="color:#2e7d32; margin-top:0;">Erfolge 🏆</h2>
-            <hr>
-            <p>Klicks total: <b id="stat-clicks">0</b></p>
-            <p>Bäume total: <b id="stat-total">0</b></p>
-            <p>Power: <b id="stat-pow">1</b></p>
-            <p>Spielzeit: <b id="stat-time">0</b> Min.</p>
-            <button class="btn btn-green" style="width:100%; margin-top:15px;" onclick="toggleStats()">Schließen</button>
-        </div>
-    </div>
-
-    <script>
-        const SB_URL = "https://teptucgylpztawlpbqb.supabase.co";
-        const SB_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRlcHR1Y2d5bHB6dGF3bHBiYnFiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM5MTc3MjMsImV4cCI6MjA4OTQ5MzcyM30.7bFpp_R4ouzVnt9ZskQgpgprsWvTcwXXQXDlYGDzyUA";
-        const sb = supabase.createClient(SB_URL, SB_KEY);
-
-        let score = 0, clickPower = 1, toolIdx = 0;
-        let totalClicks = 0, totalEarnings = 0, startTime = Date.now();
-
-        const tools = [
-            {n: "Handschuhe", s: "🧤", p: 5, c: 20},
-            {n: "Spaten", s: "🦯", p: 25, c: 500},
-            {n: "Axt", s: "🪓", p: 150, c: 5000},
-            {n: "Motorsäge", s: "⚙️", p: 500, c: 25000},
-            {n: "Traktor", s: "🚜", p: 1500, c: 150000},
-            {n: "Laser-Cutter", s: "⚡", p: 15000, c: 3000000}
-        ];
-
-        const buildings = [
-            {n: "Regenwurm", s: "🪱", p: 1, c: 50, count: 0},
-            {n: "Super-Dünger", s: "🧪", p: 10, c: 600, count: 0},
-            {n: "Gärtner", s: "👨‍🌾", p: 45, c: 5000, count: 0},
-            {n: "Gewächshaus", s: "🏠", p: 120, c: 20000, count: 0},
-            {n: "Plantage", s: "🌳", p: 500, c: 100000, count: 0},
-            {n: "Wald-Fabrik", s: "🏭", p: 2200, c: 5000000, count: 0}
-        ];
-
-        async function showLeaderboard() {
-            const { data, error } = await sb.from('leaderboard').select('username, coins_total').order('coins_total', { ascending: false }).limit(10);
-            if (error) return;
-            let html = "<table>";
-            data.forEach((entry, i) => {
-                html += `<tr><td>${i+1}. ${entry.username}</td><td style="text-align:right">${Math.floor(entry.coins_total).toLocaleString('de-DE')}</td></tr>`;
-            });
-            document.getElementById("leaderboard-list").innerHTML = html + "</table>";
-        }
-
-        async function sendScore() {
-            const name = prompt("Dein Name:");
-            if(!name) return;
-            const { error } = await sb.from('leaderboard').upsert({ username: name, coins_total: score }, { onConflict: 'username' });
-            if(error) alert("Fehler!"); else { alert("Gespeichert!"); showLeaderboard(); }
-        }
-
-        function buildShop() {
-            let h = `<h3>Werkzeuge</h3><div id="t-btn" class="shop-item" onclick="buyTool()"><b id="t-n"></b><br><span id="t-c"></span></div><h3>Gebäude</h3>`;
-            buildings.forEach((b, i) => {
-                h += `<div id="b-${i}" class="shop-item" onclick="buyB(${i})"><b>${b.n} ${b.s} (+${b.p}/s)</b><br><span id="bc-${i}"></span></div>`;
-            });
-            document.getElementById("shop-container").innerHTML = h;
-        }
-
-        function update() {
-            document.getElementById("score-display").innerText = Math.floor(score).toLocaleString('de-DE') + " 🌳";
-            document.getElementById("ui-pow").innerText = Math.floor(clickPower).toLocaleString('de-DE');
-            let pps = 0;
-            buildings.forEach((b, i) => {
-                pps += b.count * b.p;
-                document.getElementById("bc-" + i).innerText = "Kosten: " + b.c.toLocaleString('de-DE') + " (Besitz: " + b.count + ")";
-                document.getElementById("b-" + i).classList.toggle("disabled", score < b.c);
-            });
-            document.getElementById("ui-pps").innerText = pps.toLocaleString('de-DE');
-            const t = tools[toolIdx];
-            if(t) {
-                document.getElementById("t-n").innerText = t.n + " " + t.s;
-                document.getElementById("t-c").innerText = "Kosten: " + t.c.toLocaleString('de-DE');
-                document.getElementById("t-btn").classList.toggle("disabled", score < t.c);
-            }
-        }
-
-        function doClick(e) {
-            score += clickPower; totalClicks++; totalEarnings += clickPower;
-            update();
-            save();
-        }
-
-        function buyTool() {
-            let t = tools[toolIdx];
-            if(t && score >= t.c) { score -= t.c; clickPower += t.p; toolIdx++; update(); save(); }
-        }
-
-        function buyB(i) {
-            let b = buildings[i];
-            if(score >= b.c) { score -= b.c; b.count++; b.c = Math.round(b.c * 1.3); update(); save(); }
-        }
-
-        function save() {
-            const d = { s: score, cp: clickPower, ti: toolIdx, b: buildings, tc: totalClicks, te: totalEarnings, st: startTime };
-            localStorage.setItem("tree_v8", JSON.stringify(d));
-        }
-
-        function toggleStats() {
-            const m = document.getElementById('stats-modal');
-            if(m.style.display === 'flex') m.style.display = 'none';
-            else {
-                document.getElementById('stat-clicks').innerText = totalClicks.toLocaleString('de-DE');
-                document.getElementById('stat-total').innerText = Math.floor(totalEarnings).toLocaleString('de-DE');
-                document.getElementById('stat-pow').innerText = Math.floor(clickPower).toLocaleString('de-DE');
-                document.getElementById('stat-time').innerText = Math.floor((Date.now()-startTime)/60000);
-                m.style.display = 'flex';
-            }
-        }
-
-        function handleAuth() { alert("Login bald verfügbar!"); }
-
-        window.onload = () => {
-            buildShop();
-            const saved = localStorage.getItem("tree_v8");
-            if(saved) {
-                const d = JSON.parse(saved);
-                score = d.s; clickPower = d.cp; toolIdx = d.ti; totalClicks = d.tc || 0; totalEarnings = d.te || 0; startTime = d.st || Date.now();
-                if(d.b) d.b.forEach((sb, i) => { if(buildings[i]){ buildings[i].count = sb.count; buildings[i].c = sb.c; }});
-            }
-            update();
-            showLeaderboard();
-            setInterval(() => {
-                let pps = 0; buildings.forEach(b => pps += b.count * b.p);
-                if(pps > 0) { score += pps; totalEarnings += pps; update(); }
-            }, 1000);
-        };
-    </script>
 </body>
 </html>
