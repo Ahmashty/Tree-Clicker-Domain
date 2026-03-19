@@ -135,8 +135,13 @@
 
     <script>
 
-
-      // --- SOUNDS ---
+function formatNumber(num) {
+    if (num >= 1000000) return (num / 1000000).toFixed(1) + " Mio";
+    if (num >= 1000) return (num / 1000).toFixed(1) + "k";
+    return num;
+}
+    
+         // --- SOUNDS ---
         const clickSound = new Audio('click.mp3');
         const buySound = new Audio('kaching.mp3');
         let audioUnlocked = false;
