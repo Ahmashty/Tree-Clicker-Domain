@@ -212,15 +212,38 @@
         }
 
         async function handleAuth() {
-            if(user) { await sb.auth.signOut(); location.reload(); }
-            else {
-                const m = prompt("E-Mail für Cloud Save:");
-                if(m) {
-                    const { error } = await sb.auth.signInWithOtp({ email: m });
-                    alert(error ? "Fehler: " + error.message : "Check deine E-Mails!");
-                }
-            }
+    console.log("Starte Login-Prozess...");
+    
+    if (typeof supabase === 'undefined') {
+        alert("KRITISCH: Die Supabase-Bibliothek wurde nicht geladen! Hast du Internet?");
+        return;
+    }
+
+    const m = prompt("E-Mail für Cloud Save:");
+    if(!m) return;
+
+    try {
+        const { data, error } = await sb.auth.signInWithOtp({ 
+            email: m,
+            options: { emailRedirectTo: window.location.href }
+        });
+        
+        if(error) {
+            // Hier erfahren wir den echten Grund (z.B. "Invalid API Key" oder "Domain not allowed")
+            alert("Supabase Fehler-Details: " + error.message + " (Status: " + error.status + ")");
+            console.error(error);
+        } else {
+            alert("Magic Link an " + m + " gesendet! Bitte schau in dein Postfach.");
         }
+    } catch (err) {
+        // Das fängt den "Load failed" Netzwerkfehler ab
+        alert("NETZWERK-FEHLER: Die Verbindung zu Supabase wurde vom Browser/Provider blockiert. (Load failed)");
+        console.error("Netzwerk-Error:", err);
+    }
+}
+                
+            
+      
 
         function toggleStats() {
             const m = document.getElementById('stats-modal');
