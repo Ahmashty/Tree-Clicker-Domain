@@ -259,6 +259,15 @@
             }
         }
 
+         async function sendScore() {
+    const name = prompt("Dein Gärtner-Name:");
+    const { error } = await sb
+        .from('leaderboard')
+        .upsert({ username: name, coins_total: coins }); // 'coins' ist deine Variable im Spiel
+
+    if (error) alert("Fehler: " + error.message);
+    else alert("Score gespeichert!");
+}
         async function handleAuth() {
     console.log("Starte Login-Prozess...");
     
