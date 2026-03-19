@@ -36,7 +36,12 @@ td { padding: 4px; border-bottom: 1px solid #333; }
 
 <body>
 
-<div class="auth-bar">
+console.log("Supabase Test...");
+
+sb.from('leaderboard').select('*')
+.then(res => console.log(res))
+.catch(err => console.log("FEHLER:", err));
+     <div class="auth-bar">
 <button id="auth-btn" class="btn btn-blue" onclick="handleAuth()">Login 🔑</button>
 </div>
 
