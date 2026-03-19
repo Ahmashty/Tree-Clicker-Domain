@@ -86,7 +86,18 @@
 
 <body onpointerdown="unlockAudio()">
 
-    <div class="auth-bar">
+   <div id="leaderboard-ui" style="background: rgba(0,0,0,0.8); color: white; padding: 20px; border-radius: 15px; margin-top: 20px; text-align: center; border: 2px solid #4CAF50;">
+    <h2 style="color: #4CAF50; margin-top: 0;">🏆 Top Gärtner</h2>
+    
+    <div id="leaderboard-list" style="text-align: left; margin-bottom: 15px;">
+        Lade die besten Spieler...
+    </div>
+
+    <button onclick="showLeaderboard()" style="background: #4CAF50; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-weight: bold;">
+        Aktualisieren 🔄
+    </div>
+</div>
+     <div class="auth-bar">
         <span id="user-info">Offline-Modus</span>
         <button id="auth-btn" class="btn btn-blue" onclick="handleAuth()">Login 🔑</button>
     </div>
