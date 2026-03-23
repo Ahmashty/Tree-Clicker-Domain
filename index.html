@@ -159,7 +159,7 @@
             });
             document.getElementById("forest-map").innerHTML = mHtml;
             
-            let nextPrice = forests.length * 1000000;
+            let nextPrice = forests.length * 1500000;
             document.getElementById("forest-price").innerText = nextPrice.toLocaleString('de-DE');
             document.getElementById("buy-forest-btn").classList.toggle("disabled", score < nextPrice);
         }
@@ -188,7 +188,7 @@
         }
 
         function buyNewForest() {
-            let p = forests.length * 1000000;
+            let p = forests.length * 5000000;
             if(score >= p) {
                 score -= p;
                 forests.push({
