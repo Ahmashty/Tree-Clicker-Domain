@@ -14,7 +14,8 @@
   <meta name="keywords" content="clicker spiel,clicker game, bored, free, online spiel, tree clicker, idle game, kostenlos spielen">
 
     <style>
-        body { text-align: center; font-family: 'Segoe UI', sans-serif; background: #e8f5e9; margin: 0; display: flex; height: 100vh; overflow: hidden; user-select: none; }
+       body { text-align: center; font-family: 'Segoe UI', sans-serif; background: #e8f5e9; margin: 0; display: flex; flex-direction: column; min-height: 100vh; overflow-x: hidden; user-select: none; }
+
         .left { flex: 1.2; display: flex; flex-direction: column; align-items: center; justify-content: center; background: #c8e6c9; border-right: 5px solid #2e7d32; position: relative; }
         .right { flex: 1; background: white; padding: 20px; overflow-y: auto; text-align: left; box-shadow: -2px 0 10px rgba(0,0,0,0.1); }
         .auth-bar { position: absolute; top: 10px; right: 10px; z-index: 100; }
@@ -37,6 +38,8 @@
     </style>
 </head>
 <body>
+<body>
+<div style="display: flex; height: 100vh; overflow: hidden;">
 
     <div id="welcome-overlay">
         <div style="background: white; padding: 30px; border-radius: 20px; max-width: 400px; text-align: center; box-shadow: 0 0 20px #4caf50;">
@@ -269,6 +272,12 @@
            
         };
     </script>
+
+</div> <!-- Ende Spiel-Wrapper -->
+
+<div style="max-width: 800px; ...">
+
+    
     <div style="max-width: 800px; margin: 40px auto; padding: 20px; font-family: 'Segoe UI', sans-serif; color: #333; line-height: 1.8;">
 
   <h2 style="color: #2e7d32;">🌳 Was ist Tree Clicker?</h2>
